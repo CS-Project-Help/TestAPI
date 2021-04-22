@@ -22,6 +22,6 @@ from djangoProject10 import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     url('hello/', views.test),
-    path('polls/', include('polls.urls')),
+    path('', include('polls.urls')),
 
 ]

@@ -1,25 +1,58 @@
 import datetime
+import json
+from json import JSONEncoder
 
-from django.utils import timezone
 from django.db import models
 
-
-class Question(models.Model):
-    question_text = models.CharField(max_length=200)
-    pub_date = models.DateTimeField('date published')
-
-    def __str__(self):
-        return self.question_text
-
-    def was_published_recently(self):
-        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)
+class UserEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__
 
 
-class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    choice_text = models.CharField(max_length=200)
-    votes = models.IntegerField(default=0)
+class User(models.Model):
+    email = models.TextField()
+    nickname = models.TextField()
+    first_name = models.TextField(null=True)
+    last_name = models.TextField(null=True)
+    country = models.TextField(null=True)
+    birthday = models.DateField(null=True)
 
-    def __str__(self):
-        return self.choice_text
 
+class Organisation(models.Model):
+    name = models.TextField(blank=True)
+    subject = models.TextField(blank=True)
+    logo = models.TextField(blank=True)
+    _contacts = models.TextField(blank=True)
+
+    @property
+    def contacts(self):
+        if self._contacts:
+            return json.loads(self._contacts)
+        return []
+
+    @contacts.setter
+    def contacts(self, value):
+        self._contacts = json.dumps(list(dict.fromkeys(value)))
+
+
+class Project(models.Model):
+    name = models.TextField(blank=True)
+    subject = models.TextField(blank=True)
+    organization = models.ForeignKey(
+        Organisation,
+        on_delete=models.CASCADE,
+        related_name="projects",
+        related_query_name="project",
+        null=True
+    )
+    _images = models.TextField(blank=True)
+
+    @property
+    def images(self):
+        if self._images:
+            return json.loads(self._images)
+        return []
+
+    @images.setter
+    def images(self, value):
+        self._images = json.dumps(list(dict.fromkeys(value)))

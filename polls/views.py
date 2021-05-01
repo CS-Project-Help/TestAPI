@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import User, Organisation, Project, UserEncoder
+from .models import User, Organisation, Project, Encoder, Donate
 
 
 @csrf_exempt
@@ -13,7 +13,7 @@ def get_user(request):
         user = User.objects.get(pk=id)
     except User.DoesNotExist:
         return HttpResponseBadRequest()
-    return JsonResponse(UserEncoder().encode(user), safe=False)
+    return JsonResponse(Encoder().encode(user), safe=False)
 
 
 @csrf_exempt
@@ -21,79 +21,211 @@ def create_user(request):
     user = User()
     user.email = request.POST.get('email', None)
     user.password = request.POST.get('password', None)
+    if user.email or user.password is None:
+        return HttpResponseBadRequest()
     user.first_name = request.POST.get('first_name', None)
     user.second_name = request.POST.get('second_name', None)
     user.birthday = request.POST.get('birthday', None)
     user.country = request.POST.get('country', None)
     user.save()
-    return JsonResponse(UserEncoder().encode(user), safe=False)
+    return JsonResponse({'email': user.email, 'id': user.pk}, safe=False)
 
 
-def get_organisations(request):
-    organisation = Organisation()
-    organisation.name = "test.org"
-    organisation.save()
-    return JsonResponse(list(Organisation.objects.all().values()), safe=False)
-
-
-def get_projects(request):
-    project = Project()
-    project.name = "test.project"
-    project.save()
-    return JsonResponse(list(Project.objects.all().values()), safe=False)
-
-
+@csrf_exempt
 def change_password(request):
-    return JsonResponse(list(User.objects.all().values()), safe=False)
+    id = request.GET.get('id', None)
+    try:
+        user = User.objects.get(pk=id)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
+
+    old_password = request.POST.get('old password', None)
+    if old_password is not user.password:
+        return HttpResponseBadRequest()
+
+    new_password = request.POST.get('new password', None)
+    if new_password is None:
+        return HttpResponseBadRequest()
+    user.password = new_password
+    user.save()
+    return HttpResponse()
 
 
+@csrf_exempt
 def restore_password(request):
-    return None
+    email = request.GET.get('email', None)
+    if email is None:
+        return HttpResponseBadRequest()
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
+    return HttpResponse()
 
 
+@csrf_exempt
 def create_new_password(request):
-    return None
+    id = request.GET.get('id', None)
+    try:
+        user = User.objects.get(pk=id)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
+    new_password = request.POST.get('new password', None)
+    if new_password is None:
+        return HttpResponseBadRequest()
+    user.password = new_password
+    user.save()
+    return HttpResponse()
 
 
+@csrf_exempt
 def login(request):
-    return None
+    email = request.GET.get('email', None)
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
+    password = request.POST.get('password', None)
+    if password == user.password:
+        return HttpResponse()
+    else:
+        return HttpResponseBadRequest()
 
 
+@csrf_exempt
 def logout(request):
-    return None
+    id = request.GET.get('id', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        user = User.objects.get(pk=id)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
+    return HttpResponse()
 
 
+@csrf_exempt
 def update_profile(request):
-    return None
+    id = request.GET.get('id', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        user = User.objects.get(pk=id)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
+    user.first_name = request.POST.get('first_name', None)
+    user.second_name = request.POST.get('second_name', None)
+    user.birthday = request.POST.get('birthday', None)
+    user.country = request.POST.get('country', None)
+    user.save()
+    return HttpResponse()
 
 
+@csrf_exempt
 def change_email(request):
-    return None
+    id = request.GET.get('id', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        user = User.objects.get(pk=id)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
+    new_email = request.POST.get('new_email', None)
+    if new_email is None:
+        return HttpResponseBadRequest()
+    user.email = new_email
+    user.save()
+    return HttpResponse()
 
 
+@csrf_exempt
 def donate_history(request):
     return None
 
 
+@csrf_exempt
 def current_donations(request):
+    id = request.GET.get('id', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        user = User.objects.get(pk=id)
+    except User.DoesNotExist:
+        return HttpResponseBadRequest()
     return None
 
 
+@csrf_exempt
+def get_projects(request):
+    return None
+
+
+@csrf_exempt
 def get_project(request):
-    return None
+    id = request.GET.get('id', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        project = Project.objects.get(pk=id)
+    except Project.DoesNotExist:
+        return HttpResponseBadRequest()
+    return JsonResponse(Encoder().encode(project), safe=False)
 
 
+@csrf_exempt
+def get_organisations(request):
+    id = request.GET.get('id', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        organisation = Organisation.objects.get(pk=id)
+    except Organisation.DoesNotExist:
+        return HttpResponseBadRequest()
+    return JsonResponse(Encoder().encode(organisation), safe=False)
+
+
+@csrf_exempt
 def donate_organization(request):
+    donate = Donate()
+    id = request.GET.get('id', None)
+    organisation_id = request.GET.get('organisation id', None)
+    if id is None or organisation_id is None:
+        return HttpResponseBadRequest()
+    try:
+        organisation = Organisation.objects.get(pk=organisation_id)
+    except Organisation.DoesNotExist:
+        return HttpResponseBadRequest()
     return None
 
 
+@csrf_exempt
 def donate_project(request):
+    id = request.GET.get('id', None)
+    project_id = request.GET.get('project id', None)
+    if id is None or project_id is None:
+        return HttpResponseBadRequest()
+    try:
+        user = User.objects.get(pk=id)
+        project = Project.objects.get(pk=project_id)
+    except Project.DoesNotExist or User.DoesNotExist:
+        return HttpResponseBadRequest()
     return None
 
 
+@csrf_exempt
 def delete_donate(request):
-    return None
+    id = request.GET.get('id', None)
+    period = request.GET.get('period', None)
+    sum = request.GET.get('sum', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        donate = Donate.objects.get(pk=id)
+    except Donate.DoesNotExist:
+        return HttpResponseBadRequest()
+    return HttpResponse()
 
 
+@csrf_exempt
 def get_countries(request):
-    return None
+    return HttpResponse()

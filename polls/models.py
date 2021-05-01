@@ -1,10 +1,10 @@
-import datetime
 import json
 from json import JSONEncoder
 
 from django.db import models
 
-class UserEncoder(JSONEncoder):
+
+class Encoder(JSONEncoder):
     def default(self, o):
         return o.__dict__
 
@@ -12,6 +12,7 @@ class UserEncoder(JSONEncoder):
 class User(models.Model):
     email = models.TextField()
     nickname = models.TextField()
+    password = models.TextField()
     first_name = models.TextField(null=True)
     last_name = models.TextField(null=True)
     country = models.TextField(null=True)
@@ -56,3 +57,8 @@ class Project(models.Model):
     @images.setter
     def images(self, value):
         self._images = json.dumps(list(dict.fromkeys(value)))
+
+
+class Donate(models.Model):
+    sum = models.TextField()
+    period = models.TextField(null=True)

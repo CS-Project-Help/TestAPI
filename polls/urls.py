@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.authtoken.views import obtain_auth_token
 
 from . import views
 
@@ -13,7 +14,6 @@ urlpatterns = [
     path('users/logout', views.logout),
     path('users/update_profile', views.update_profile),
     path('users/change_email', views.change_email),
-    path('users/donate_history', views.donate_history),
     path('users/current_donations', views.current_donations),
     path('projects/get_projects', views.get_projects),
     path('projects/get_project', views.get_project),
@@ -21,6 +21,6 @@ urlpatterns = [
     path('donaties/donate_organization', views.donate_organization),
     path('donaties/donate_project', views.donate_project),
     path('donaties/delete_donate', views.delete_donate),
-    path('country/get_countries', views.get_countries),
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
 
 ]

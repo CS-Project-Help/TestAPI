@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import User, Organisation, Project, Encoder, Donate
+from .models import User, Organisation, Project, Encoder, Donation
 
 
 @csrf_exempt
@@ -139,11 +139,6 @@ def change_email(request):
 
 
 @csrf_exempt
-def donate_history(request):
-    return None
-
-
-@csrf_exempt
 def current_donations(request):
     id = request.GET.get('id', None)
     if id is None:
@@ -152,12 +147,20 @@ def current_donations(request):
         user = User.objects.get(pk=id)
     except User.DoesNotExist:
         return HttpResponseBadRequest()
-    return None
+    donation = user.donations
+    return JsonResponse(Encoder().encode(donation), safe=False)
 
 
 @csrf_exempt
 def get_projects(request):
-    return None
+    id = request.GET.get('id', None)
+    if id is None:
+        return HttpResponseBadRequest()
+    try:
+        project = Project.objects.get(pk=id)
+    except Project.DoesNotExist:
+        return HttpResponseBadRequest()
+    return JsonResponse(Encoder().encode(project), safe=False)
 
 
 @csrf_exempt
@@ -186,7 +189,7 @@ def get_organisations(request):
 
 @csrf_exempt
 def donate_organization(request):
-    donate = Donate()
+    donate = Donation()
     id = request.GET.get('id', None)
     organisation_id = request.GET.get('organisation id', None)
     if id is None or organisation_id is None:
@@ -220,12 +223,8 @@ def delete_donate(request):
     if id is None:
         return HttpResponseBadRequest()
     try:
-        donate = Donate.objects.get(pk=id)
-    except Donate.DoesNotExist:
+        donate = Donation.objects.get(pk=id)
+    except Donation.DoesNotExist:
         return HttpResponseBadRequest()
-    return HttpResponse()
-
-
-@csrf_exempt
-def get_countries(request):
+    donate.delete()
     return HttpResponse()

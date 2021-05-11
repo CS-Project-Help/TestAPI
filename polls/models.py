@@ -59,6 +59,13 @@ class Project(models.Model):
         self._images = json.dumps(list(dict.fromkeys(value)))
 
 
-class Donate(models.Model):
+class Donation(models.Model):
     sum = models.TextField()
     period = models.TextField(null=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="donations",
+        related_query_name="donation",
+        null=True
+    )
